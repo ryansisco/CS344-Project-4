@@ -5,16 +5,14 @@
 
 int main(int argc, char **argv) {
 	if (argc != 2) {	//Not 2 command line args
-		printf("ERROR\n");
-		printf("SYNTAX: keygen [key length]\n");
+		fprintf(stderr, "ERROR\nSYNTAX: keygen [key length]\n");
 		exit(1);
 	}
 	else {	// 2 command line args
 		srand(time(NULL));
 		int i, keylength = atoi(argv[1]);
 		if (keylength == 0) {
-			printf("ERROR\n");
-			printf("SYNTAX: keygen [key length]\n");
+			fprintf(stderr, "ERROR\nSYNTAX: keygen [key length]\n");
 			exit(1);
 		}
 		else {
