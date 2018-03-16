@@ -31,6 +31,8 @@ void fillarray(char *filename, char *stn, int size) {
 	while(!(feof(r))) {
 		int character = fgetc(r);
 		if (character == '\n') {
+			stn[q] = '@';
+			stn[q+1] = '@';
 			break;
 		}
 		stn[q] = character;
@@ -54,6 +56,7 @@ void execute(char *text, char *key, int port) {
 		exit(1);
 	}
 	send(socketFD, text, strlen(text), 0); // Write to the server
+	sleep(3);
 	send(socketFD, key, strlen(key), 0);
 	memset(text, '\0', strlen(text)); // Clear out the text again for reuse
 	recv(socketFD, text, strlen(text) - 1, 0); // Read data from the socket, leaving \0 at end
@@ -67,7 +70,7 @@ int validate(char *text, char *key, int port) {
 		fprintf(stderr, "ERROR\nKey is too small!\n");
 		exit(1);
 	}
-	for (i = 0; i < strlen(text); i++) {	// checks textfile
+	for (i = 0; i < strlen(text)-2; i++) {	// checks textfile
 		if (text[i] > 90) {	// checks outside ascii bounds
 			fprintf(stderr, "ERROR\nText has illegal characters!\n");
 			exit(1);
@@ -79,7 +82,7 @@ int validate(char *text, char *key, int port) {
 			exit(1);
 		}
 	}
-	for (i = 0; i < strlen(key); i++) {	// checks keyfile
+	for (i = 0; i < strlen(key)-2; i++) {	// checks keyfile
 		if (key[i] > 90) {	// checks outside ascii bounds
 			fprintf(stderr, "ERROR\nKey has illegal characters!\n");
 			exit(1);
@@ -110,12 +113,12 @@ int main(int argc, char **argv) {
 		for (i = 1; i < 4; i++) {	// for command args
 			if (i == 1) {	// text to decrypt
 				size = scanfile(argv[i]);
-				text = (char*)malloc(size);
+				text = (char*)malloc(size+2);
 				fillarray(argv[i], text, size);
 			}
 			if (i == 2) {	// key
 				size = scanfile(argv[i]);
-				key = (char*)malloc(size);
+				key = (char*)malloc(size+2);
 				fillarray(argv[i], key, size);
 			}
 			if (i == 3) {

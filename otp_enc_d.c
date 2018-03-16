@@ -12,8 +12,8 @@ int main(int argc, char *argv[])
 {
 	int listenSocketFD, establishedConnectionFD, portNumber, charsRead;
 	socklen_t sizeOfClientInfo;
-	char text[10000];
-	char key[10000];
+	char text[200000];
+	char key[200000];
 	struct sockaddr_in serverAddress, clientAddress;
 
 	if (argc < 2) { fprintf(stderr,"USAGE: %s port\n", argv[0]); exit(1); } // Check usage & args
@@ -40,12 +40,23 @@ int main(int argc, char *argv[])
 	if (establishedConnectionFD < 0) error("ERROR on accept");
 
 	// Get the message from the client and display it
-	memset(text, '\0', 10001);
-	charsRead = recv(establishedConnectionFD, text, 10000, 0); // Read the client's message from the socket
+	memset(text, '\0', 200001);
+	char readBuffer[10000];
+	//charsRead = recv(establishedConnectionFD, text, 10000, 0); // Read the client's message from the socket
+	while (strstr(text, "@@") == NULL) {
+		memset(readBuffer, '\0', sizeof(readBuffer));
+		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+		strcat(text, readBuffer);
+	}
 	printf("SERVER: I received this from the client: \"%s\"\n", text);
 
-	memset(key, '\0', 10001);
-	charsRead = recv(establishedConnectionFD, key, 10000, 0);
+	memset(key, '\0', 200001);
+	memset(readBuffer, '\0', 10001);
+	while (strstr(key, "@@") == NULL) {
+		memset(readBuffer, '\0', sizeof(readBuffer));
+		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+		strcat(key, readBuffer);
+	}
 	printf("SERVER: I received this from the client: \"%s\"\n", key);
 	// Send a Success message back to the client
 	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
