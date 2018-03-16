@@ -2,6 +2,35 @@
 #include <stdio.h>
 #include <string.h>
 
+
+
+int scanfile(char *filename) {
+	FILE *r = fopen(filename, "r");
+	if (r == NULL) {
+		fprintf(stderr, "cannot open %s\n", filename);
+		exit(1);
+	}
+	fseek(r, 0L, SEEK_END);
+	int size = ftell(r), q = 0;
+	fseek(r, 0L, SEEK_SET);
+	fclose(r);
+	return size;
+}
+
+void fillarray(char *filename, char *stn, int size) {
+	FILE *r = fopen(filename, "r");
+	int q = 0;
+	while(!(feof(r))) {
+		int character = fgetc(r);
+		if (character == '\n') {
+			break;
+		}
+		stn[q] = character;
+		q++;
+	}
+	fclose(r);
+}
+
 void execute(char *text, char *key, int port) {
 	printf("VALIDATED\n");
 }
@@ -58,48 +87,14 @@ int main(int argc, char **argv) {
 		int i, size, q;
 		for (i = 1; i < 4; i++) {	// for command args
 			if (i == 1) {	// text to decrypt
-				FILE *r = fopen(argv[i], "r");
-				if (r == NULL) {
-					fprintf(stderr, "cannot open %s\n", argv[i]);
-					fclose(r);
-					exit(1);
-				}
-				fseek(r, 0L, SEEK_END);
-				size = ftell(r);
-				fseek(r, 0L, SEEK_SET);
+				size = scanfile(argv[i]);
 				text = (char*)malloc(size);
-				q = 0;
-				while(!(feof(r))) {
-					int character = fgetc(r);
-					if (character == '\n') {
-						break;
-					}
-					text[q] = character;
-					q++;
-				}
-				fclose(r);
+				fillarray(argv[i], text, size);
 			}
 			if (i == 2) {	// key
-				FILE *r = fopen(argv[i], "r");
-				if (r == NULL) {
-					fprintf(stderr, "cannot open %s\n", argv[i]);
-					fclose(r);
-					exit(1);
-				}
-				fseek(r, 0L, SEEK_END);
-				size = ftell(r);
-				fseek(r, 0L, SEEK_SET);
+				size = scanfile(argv[i]);
 				key = (char*)malloc(size);
-				q = 0;
-				while(!(feof(r))) {
-					int character = fgetc(r);
-					if (character == '\n') {
-						break;
-					}
-					key[q] = character;
-					q++;
-				}
-				fclose(r);
+				fillarray(argv[i], key, size);
 			}
 			if (i == 3) {
 				port = atoi(argv[3]);
