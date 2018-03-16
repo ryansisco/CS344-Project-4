@@ -43,35 +43,20 @@ void execute(char *text, char *key, int port) {
 	int socketFD, charsWritten, charsRead;
 	struct sockaddr_in serverAddress;
 	struct hostent* serverHostInfo;
-
-	// Set up the server address struct
 	memset((char*)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
 	serverAddress.sin_family = AF_INET; // Create a network-capable socket
 	serverAddress.sin_port = htons(port); // Store the port number
 	serverHostInfo = gethostbyname("localhost"); // Convert the machine name into a special form of address
-	if (serverHostInfo == NULL) { fprintf(stderr, "CLIENT: ERROR, no such host\n"); exit(0); }
 	memcpy((char*)&serverAddress.sin_addr.s_addr, (char*)serverHostInfo->h_addr, serverHostInfo->h_length); // Copy in the address
-
-	// Set up the socket
 	socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
-	if (socketFD < 0) error("CLIENT: ERROR opening socket");
-	
-	// Connect to server
-	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
-		error("CLIENT: ERROR connecting");
-
-
-	// Send message to server
+	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress))) { // Connect socket to address
+		fprintf(stderr, "ERROR\nBad port\n");
+		exit(1);
+	}
 	charsWritten = send(socketFD, text, strlen(text), 0); // Write to the server
-	if (charsWritten < 0) error("CLIENT: ERROR writing to socket");
-	if (charsWritten < strlen(text)) printf("CLIENT: WARNING: Not all data written to socket!\n");
-
-	// Get return message from server
 	memset(text, '\0', strlen(text)); // Clear out the text again for reuse
 	charsRead = recv(socketFD, text, strlen(text) - 1, 0); // Read data from the socket, leaving \0 at end
-	if (charsRead < 0) error("CLIENT: ERROR reading from socket");
 	printf("CLIENT: I received this from the server: \"%s\"\n", text);
-
 	close(socketFD); // Close the socket
 }
 
