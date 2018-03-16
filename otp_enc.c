@@ -40,7 +40,7 @@ void fillarray(char *filename, char *stn, int size) {
 }
 
 void execute(char *text, char *key, int port) {
-	int socketFD, charsWritten, charsRead;
+	int socketFD;
 	struct sockaddr_in serverAddress;
 	struct hostent* serverHostInfo;
 	memset((char*)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
@@ -53,10 +53,11 @@ void execute(char *text, char *key, int port) {
 		fprintf(stderr, "ERROR\nBad port\n");
 		exit(1);
 	}
-	charsWritten = send(socketFD, text, strlen(text), 0); // Write to the server
+	send(socketFD, text, strlen(text), 0); // Write to the server
+	send(socketFD, key, strlen(key), 0);
 	memset(text, '\0', strlen(text)); // Clear out the text again for reuse
-	charsRead = recv(socketFD, text, strlen(text) - 1, 0); // Read data from the socket, leaving \0 at end
-	printf("CLIENT: I received this from the server: \"%s\"\n", text);
+	recv(socketFD, text, strlen(text) - 1, 0); // Read data from the socket, leaving \0 at end
+	//printf("CLIENT: I received this from the server: \"%s\"\n", text);
 	close(socketFD); // Close the socket
 }
 
