@@ -2,11 +2,47 @@
 #include <stdio.h>
 #include <string.h>
 
+void execute(char *text, char *key, int port) {
+	printf("VALIDATED\n");
+}
 
 int validate(char *text, char *key, int port) {
-	printf("%s\n", text);
-	printf("%s\n", key);
-	printf("%d\n", port);
+	int i;
+	// printf("%s\n", text);
+	// printf("%s\n", key);
+	// printf("%d\n", port);
+	if (strlen(text) > strlen(key)) {	// checks key is greater than text
+		fprintf(stderr, "ERROR\nKey is too small!\n");
+		exit(1);
+	}
+	for (i = 0; i < strlen(text); i++) {	// checks textfile
+		if (text[i] > 90) {	// checks outside ascii bounds
+			fprintf(stderr, "ERROR\nText has illegal characters!\n");
+			exit(1);
+		}
+		else if (text[i] == ' ') { // allows spaces
+		}
+		else if (text[i] < 65) {	// checks outside ascii bounds
+			fprintf(stderr, "ERROR\nText has illegal characters!\n");
+			exit(1);
+		}
+	}
+	for (i = 0; i < strlen(key); i++) {	// checks keyfile
+		if (key[i] > 90) {	// checks outside ascii bounds
+			fprintf(stderr, "ERROR\nKey has illegal characters!\n");
+			exit(1);
+		}
+		else if (key[i] == ' ') {	// allows spaces
+		}
+		else if (key[i] < 65) {	// checks outside ascii bounds
+			fprintf(stderr, "ERROR\nKey has illegal characters!\n");
+			exit(1);
+		}
+	}
+	if (port == 0) {	// checks port
+		fprintf(stderr, "ERROR\nPort must be a number!\n");
+	}
+
 	return 1;
 }
 
@@ -26,7 +62,7 @@ int main(int argc, char **argv) {
 				if (r == NULL) {
 					fprintf(stderr, "cannot open %s\n", argv[i]);
 					fclose(r);
-					return(1);
+					exit(1);
 				}
 				fseek(r, 0L, SEEK_END);
 				size = ftell(r);
@@ -48,7 +84,7 @@ int main(int argc, char **argv) {
 				if (r == NULL) {
 					fprintf(stderr, "cannot open %s\n", argv[i]);
 					fclose(r);
-					return(1);
+					exit(1);
 				}
 				fseek(r, 0L, SEEK_END);
 				size = ftell(r);
@@ -70,7 +106,9 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	validate(text, key, port);
+	if (validate(text, key, port)) {
+		execute(text, key, port);
+	}
 	free(text);
 	free(key);
 	return 0;
