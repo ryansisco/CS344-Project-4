@@ -78,13 +78,12 @@ int validate(char *text, char *key, int port) {
 
 int main(int argc, char **argv) {
 	char *text, *key;
-	int port;
+	int port, size, i, q;
 	if (argc != 4) {
 		fprintf(stderr, "ERROR\nSYNTAX: otp_dec [text] [key] [port]\n");
 		return(1);
 	}
 	else {
-		int i, size, q;
 		for (i = 1; i < 4; i++) {	// for command args
 			if (i == 1) {	// text to decrypt
 				size = scanfile(argv[i]);
