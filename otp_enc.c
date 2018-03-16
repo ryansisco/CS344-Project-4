@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 
-
+void clean(char *str1,char *str2) {
+	free(str1);
+	free(str2);
+}
 
 int scanfile(char *filename) {
 	FILE *r = fopen(filename, "r");
@@ -37,9 +40,6 @@ void execute(char *text, char *key, int port) {
 
 int validate(char *text, char *key, int port) {
 	int i;
-	// printf("%s\n", text);
-	// printf("%s\n", key);
-	// printf("%d\n", port);
 	if (strlen(text) > strlen(key)) {	// checks key is greater than text
 		fprintf(stderr, "ERROR\nKey is too small!\n");
 		exit(1);
@@ -70,8 +70,8 @@ int validate(char *text, char *key, int port) {
 	}
 	if (port == 0) {	// checks port
 		fprintf(stderr, "ERROR\nPort must be a number!\n");
+		exit(1);
 	}
-
 	return 1;
 }
 
@@ -104,7 +104,6 @@ int main(int argc, char **argv) {
 	if (validate(text, key, port)) {
 		execute(text, key, port);
 	}
-	free(text);
-	free(key);
+	clean(text, key);
 	return 0;
 }
