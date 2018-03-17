@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 		}
 		temp3 = (temp1 - temp2);
 		if (temp3 < 0) {
-			temp3 = (temp3 + 26);
+			temp3 = (temp3 + 27);
 		}
 		if (temp3 < 26) { 
 			text[i] = (temp3 + 65);
