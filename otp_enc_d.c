@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
 		strcat(text, readBuffer);
 	}
 	printf("SERVER: I received this from the client: \"%s\"\n", text);
-
+	printf("%c\n", text[0]);
+	
 	memset(key, '\0', 200001);
 	memset(readBuffer, '\0', 10001);
 	while (strstr(key, "@@") == NULL) {
@@ -58,8 +59,34 @@ int main(int argc, char *argv[])
 		strcat(key, readBuffer);
 	}
 	printf("SERVER: I received this from the client: \"%s\"\n", key);
+	int i;
+	for (i = 0; i < sizeof(text); i++) {
+		int temp1, temp2, temp3;
+		if (text[i] == '@') {
+			break;
+		}
+		else if (text[i] == 32) {
+			temp1 = 26;
+		}
+		else if (key[i] == 32) {
+			temp2 = 26;
+		}
+		else {
+			if (text[i] > 64) {
+				temp1 = (text[i] - 65);
+			}
+			if (key[i] > 64) {
+				temp2 = (key[i] - 65);
+			}
+		}
+		temp3 = (temp2 + temp1);
+		if (temp3 > 26) {
+			temp3 = (temp3 - 26);
+		}
+		text[i] = (temp3 + 65);
+	}
 	// Send a Success message back to the client
-	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+	charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
 	if (charsRead < 0) error("ERROR writing to socket");
 	close(establishedConnectionFD); // Close the existing socket which is connected to the client
 	close(listenSocketFD); // Close the listening socket

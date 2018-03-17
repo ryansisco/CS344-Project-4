@@ -42,6 +42,7 @@ void fillarray(char *filename, char *stn, int size) {
 }
 
 void execute(char *text, char *key, int port) {
+	char *enctext = (char*)malloc(strlen(text));
 	int socketFD;
 	struct sockaddr_in serverAddress;
 	struct hostent* serverHostInfo;
@@ -58,9 +59,12 @@ void execute(char *text, char *key, int port) {
 	send(socketFD, text, strlen(text), 0); // Write to the server
 	sleep(3);
 	send(socketFD, key, strlen(key), 0);
-	memset(text, '\0', strlen(text)); // Clear out the text again for reuse
-	recv(socketFD, text, strlen(text) - 1, 0); // Read data from the socket, leaving \0 at end
-	//printf("CLIENT: I received this from the server: \"%s\"\n", text);
+	memset(enctext, '\0', strlen(enctext)); // Clear out the text again for reuse
+	recv(socketFD, enctext, strlen(enctext) - 1, 0); // Read data from the socket, leaving \0 at end
+	int newsize = strlen(enctext)-1;
+	enctext[newsize] = '\0';
+	enctext[newsize-1] = '\0';
+	printf("CLIENT: I received this from the server: \"%s\"\n", enctext);
 	close(socketFD); // Close the socket
 }
 
