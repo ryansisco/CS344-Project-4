@@ -33,80 +33,80 @@ int main(int argc, char *argv[])
 	if (bind(listenSocketFD, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to port
 		error("ERROR on binding");
 	listen(listenSocketFD, 5); // Flip the socket on - it can now receive up to 5 connections
-
-	// Accept a connection, blocking if one is not available until one connects
-	sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
-	establishedConnectionFD = accept(listenSocketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo); // Accept
-	if (establishedConnectionFD < 0) error("ERROR on accept");
+	while (1) {
+		// Accept a connection, blocking if one is not available until one connects
+		sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
+		establishedConnectionFD = accept(listenSocketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo); // Accept
+		if (establishedConnectionFD < 0) error("ERROR on accept");
 
 	// Get the message from the client and display it
+		char readBuffer[10000];
+		memset(readBuffer, '\0', 10001);
+		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+		if (strcmp(readBuffer, "enc") != 0) {
+			error("ERROR this is encrypted port");
+		}
 
-	char readBuffer[10000];
-	memset(readBuffer, '\0', 10001);
-	recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-	if (strcmp(readBuffer, "enc") != 0) {
-		error("ERROR this is encrypted port");
-	}
-
-	memset(text, '\0', 200001);
-	memset(readBuffer, '\0', 10001);
+		memset(text, '\0', 200001);
+		memset(readBuffer, '\0', 10001);
 	//charsRead = recv(establishedConnectionFD, text, 10000, 0); // Read the client's message from the socket
-	while (strstr(text, "@@") == NULL) {
-		memset(readBuffer, '\0', sizeof(readBuffer));
-		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-		strcat(text, readBuffer);
-	}
-	//printf("SERVER: I received this from the client: \"%s\"\n", text);
-	char first = text[0];
+		while (strstr(text, "@@") == NULL) {
+			memset(readBuffer, '\0', sizeof(readBuffer));
+			recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+			strcat(text, readBuffer);
+		}
+		//printf("SERVER: I received this from the client: \"%s\"\n", text);
+		char first = text[0];
 
-	memset(key, '\0', 200001);
-	memset(readBuffer, '\0', 10001);
-	while (strstr(key, "@@") == NULL) {
-		memset(readBuffer, '\0', sizeof(readBuffer));
-		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-		strcat(key, readBuffer);
-	}
+		memset(key, '\0', 200001);
+		memset(readBuffer, '\0', 10001);
+		while (strstr(key, "@@") == NULL) {
+			memset(readBuffer, '\0', sizeof(readBuffer));
+			recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+			strcat(key, readBuffer);
+		}
 
-	char firstkey = key[0];
-	//printf("SERVER: I received this from the client: \"%s\"\n", key);
-	int i;
-	for (i = 0; i < sizeof(text); i++) {
-		int temp1, temp2, temp3;
-		if (i == 0) {
-			text[i] = first;
-			key[i] = firstkey;
+		char firstkey = key[0];
+		//printf("SERVER: I received this from the client: \"%s\"\n", key);
+		int i;
+		for (i = 0; i < sizeof(text); i++) {
+			int temp1, temp2, temp3;
+			if (i == 0) {
+				text[i] = first;
+				key[i] = firstkey;
+			}
+			if (text[i] == '@') {
+				break;
+			}
+			if (text[i] > 64) {
+				temp1 = (text[i] - 65);
+			}
+			if (key[i] > 64) {
+				temp2 = (key[i] - 65);
+			}
+			if (text[i] == 32) {
+				temp1 = 26;
+			}
+			if (key[i] == 32) {
+				temp2 = 26;
+			}
+
+			temp3 = (temp2 + temp1);
+			if (temp3 > 26) {
+				temp3 = (temp3 - 27);
+			}
+			if (temp3 < 26) { 
+				text[i] = (temp3 + 65);
+			}
+			if (temp3 == 26) {
+				text[i] = ' ';
+			}
 		}
-		if (text[i] == '@') {
-			break;
-		}
-		if (text[i] > 64) {
-			temp1 = (text[i] - 65);
-		}
-		if (key[i] > 64) {
-			temp2 = (key[i] - 65);
-		}
-		if (text[i] == 32) {
-			temp1 = 26;
-		}
-		if (key[i] == 32) {
-			temp2 = 26;
-		}
-		
-		temp3 = (temp2 + temp1);
-		if (temp3 > 26) {
-			temp3 = (temp3 - 27);
-		}
-		if (temp3 < 26) { 
-			text[i] = (temp3 + 65);
-		}
-		if (temp3 == 26) {
-			text[i] = ' ';
-		}
+		// Send a Success message back to the client
+		charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
+		if (charsRead < 0) error("ERROR writing to socket");
+		//close(establishedConnectionFD); // Close the existing socket which is connected to the client
+		//close(listenSocketFD); // Close the listening socket
 	}
-	// Send a Success message back to the client
-	charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
-	if (charsRead < 0) error("ERROR writing to socket");
-	close(establishedConnectionFD); // Close the existing socket which is connected to the client
-	close(listenSocketFD); // Close the listening socket
 	return 0; 
 }
