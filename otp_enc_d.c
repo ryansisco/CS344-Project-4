@@ -66,35 +66,42 @@ int main(int argc, char *argv[])
 		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
 		strcat(key, readBuffer);
 	}
+
+	char firstkey = key[0];
 	//printf("SERVER: I received this from the client: \"%s\"\n", key);
 	int i;
 	for (i = 0; i < sizeof(text); i++) {
 		int temp1, temp2, temp3;
 		if (i == 0) {
 			text[i] = first;
+			key[i] = firstkey;
 		}
 		if (text[i] == '@') {
 			break;
 		}
-		else if (text[i] == 32) {
+		if (text[i] > 64) {
+			temp1 = (text[i] - 65);
+		}
+		if (key[i] > 64) {
+			temp2 = (key[i] - 65);
+		}
+		if (text[i] == 32) {
 			temp1 = 26;
 		}
-		else if (key[i] == 32) {
+		if (key[i] == 32) {
 			temp2 = 26;
 		}
-		else {
-			if (text[i] > 64) {
-				temp1 = (text[i] - 65);
-			}
-			if (key[i] > 64) {
-				temp2 = (key[i] - 65);
-			}
-		}
+		
 		temp3 = (temp2 + temp1);
 		if (temp3 > 26) {
 			temp3 = (temp3 - 26);
 		}
-		text[i] = (temp3 + 65);
+		if (temp3 < 26) { 
+			text[i] = (temp3 + 65);
+		}
+		if (temp3 == 26) {
+			text[i] = ' ';
+		}
 	}
 	// Send a Success message back to the client
 	charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
