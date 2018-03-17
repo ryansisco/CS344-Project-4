@@ -43,6 +43,7 @@ void fillarray(char *filename, char *stn, int size) {
 
 void execute(char *text, char *key, int port) {
 	char *enctext = (char*)malloc(strlen(text));
+	char ID[3] = "enc"; 
 	int socketFD;
 	struct sockaddr_in serverAddress;
 	struct hostent* serverHostInfo;
@@ -56,6 +57,8 @@ void execute(char *text, char *key, int port) {
 		fprintf(stderr, "ERROR\nBad port\n");
 		exit(1);
 	}
+	send(socketFD, ID, 3, 0);
+	sleep(1);
 	send(socketFD, text, strlen(text), 0); // Write to the server
 	sleep(3);
 	send(socketFD, key, strlen(key), 0);
@@ -64,7 +67,7 @@ void execute(char *text, char *key, int port) {
 	int newsize = strlen(enctext)-1;
 	enctext[newsize] = '\0';
 	enctext[newsize-1] = '\0';
-	printf("CLIENT: I received this from the server: \"%s\"\n", enctext);
+	printf("%s\n", enctext);
 	close(socketFD); // Close the socket
 }
 

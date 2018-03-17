@@ -40,17 +40,25 @@ int main(int argc, char *argv[])
 	if (establishedConnectionFD < 0) error("ERROR on accept");
 
 	// Get the message from the client and display it
-	memset(text, '\0', 200001);
+
 	char readBuffer[10000];
+	memset(readBuffer, '\0', 10001);
+	recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+	if (strcmp(readBuffer, "enc") != 0) {
+		error("ERROR this is encrypted port");
+	}
+
+	memset(text, '\0', 200001);
+	memset(readBuffer, '\0', 10001);
 	//charsRead = recv(establishedConnectionFD, text, 10000, 0); // Read the client's message from the socket
 	while (strstr(text, "@@") == NULL) {
 		memset(readBuffer, '\0', sizeof(readBuffer));
 		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
 		strcat(text, readBuffer);
 	}
-	printf("SERVER: I received this from the client: \"%s\"\n", text);
-	printf("%c\n", text[0]);
-	
+	//printf("SERVER: I received this from the client: \"%s\"\n", text);
+	char first = text[0];
+
 	memset(key, '\0', 200001);
 	memset(readBuffer, '\0', 10001);
 	while (strstr(key, "@@") == NULL) {
@@ -58,10 +66,13 @@ int main(int argc, char *argv[])
 		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
 		strcat(key, readBuffer);
 	}
-	printf("SERVER: I received this from the client: \"%s\"\n", key);
+	//printf("SERVER: I received this from the client: \"%s\"\n", key);
 	int i;
 	for (i = 0; i < sizeof(text); i++) {
 		int temp1, temp2, temp3;
+		if (i == 0) {
+			text[i] = first;
+		}
 		if (text[i] == '@') {
 			break;
 		}
