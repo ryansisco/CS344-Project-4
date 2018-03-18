@@ -6,7 +6,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-void error(const char *msg) { 
+void error(const char *msg) {
+//******************************************************************************
+// FUNCTION NAME: error
+// AUTHOR: Ryan Sisco
+// PURPOSE: prints recieved error message
+// PARAMETERS: character array to print
+//****************************************************************************** 
 	fprintf(stderr, "%s\n", msg); 
 	exit(1); 
 }
@@ -14,8 +20,8 @@ void error(const char *msg) {
 int main(int argc, char *argv[]) {
 	int listenSocketFD, establishedConnectionFD, portNumber, charsRead;
 	socklen_t sizeOfClientInfo;
-	char text[200000];
-	char key[200000];
+	char text[200000];	// space for text
+	char key[200000];	// space for key
 	struct sockaddr_in serverAddress, clientAddress;
 	if (argc < 2) { fprintf(stderr,"USAGE: %s port\n", argv[0]); exit(1); } // Check usage & args
 	memset((char *)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
@@ -32,12 +38,12 @@ int main(int argc, char *argv[]) {
 	for (l = 0; l < 5; l++) {
 		int status;
 		pid_t pid = -5;
-		pid = fork();
-		if (pid < 0) {
+		pid = fork();	// forks
+		if (pid < 0) {	// if unsuccessful fork
 			perror("ERROR");
 			exit(1);
 		}
-		if (pid == 0) {
+		if (pid == 0) {	// if successful fork
 			setpgid(0,0);
 			while (1) {
 				sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
@@ -45,59 +51,59 @@ int main(int argc, char *argv[]) {
 				if (establishedConnectionFD < 0) {
 					error("ERROR on accept");
 				}
-				char readBuffer[10000];
-				memset(readBuffer, '\0', 10001);
+				char readBuffer[10000];	// creates buffer
+				memset(readBuffer, '\0', 10001);	// clears
 				recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
 				if (strcmp(readBuffer, "enc") != 0) {
 					error("ERROR\nThis is encryption port");
 				}
-				memset(text, '\0', 200001);
-				memset(readBuffer, '\0', 10001);
+				memset(text, '\0', 200001);	// clears
+				memset(readBuffer, '\0', 10001);	// clears
 				while (strstr(text, "@@") == NULL) {
 					memset(readBuffer, '\0', sizeof(readBuffer));
 					recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-					strcat(text, readBuffer);
+					strcat(text, readBuffer);	// appends buffer to text
 				}
 				char first = text[0];
-				memset(key, '\0', 200001);
-				memset(readBuffer, '\0', 10001);
+				memset(key, '\0', 200001);	// clears
+				memset(readBuffer, '\0', 10001);	// clears
 				while (strstr(key, "@@") == NULL) {
 					memset(readBuffer, '\0', sizeof(readBuffer));
 					recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-					strcat(key, readBuffer);
+					strcat(key, readBuffer);	// appends buffer to key
 				}
 				char firstkey = key[0];
 				int i;
 				for (i = 0; i < sizeof(text); i++) {
 					int temp1, temp2, temp3;
-					if (i == 0) {
+					if (i == 0) {	// resets first var due to clear
 						text[i] = first;
 						key[i] = firstkey;
 					}
-					if (text[i] == '@') {
+					if (text[i] == '@') {	// breaks if EOF
 						break;
 					}
-					if (text[i] > 64) {
-						temp1 = (text[i] - 65);
+					if (text[i] > 64) {	// regular char
+						temp1 = (text[i] - 65); // 0-25
 					}
-					if (key[i] > 64) {
-						temp2 = (key[i] - 65);
+					if (key[i] > 64) {	// regular char
+						temp2 = (key[i] - 65);	// 0-25
 					}
-					if (text[i] == 32) {
+					if (text[i] == 32) {	// space
 						temp1 = 26;
 					}
-					if (key[i] == 32) {
+					if (key[i] == 32) {	// space
 						temp2 = 26;
 					}
 					temp3 = (temp2 + temp1);
 					if (temp3 > 26) {
-						temp3 = (temp3 - 27);
+						temp3 = (temp3 - 27);	// resets to range
 					}
 					if (temp3 < 26) { 
-						text[i] = (temp3 + 65);
+						text[i] = (temp3 + 65);	// resets to ascii
 					}
 					if (temp3 == 26) {
-						text[i] = ' ';
+						text[i] = ' ';	// sets space
 					}
 				}
 				charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
