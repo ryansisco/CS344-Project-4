@@ -6,7 +6,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-void error(const char *msg) { perror(msg); exit(1); } // Error function used for reporting issues
+void error(const char *msg) { 
+	fprintf(stderr, "%s\n", msg); 
+	exit(1); 
+}
 
 int main(int argc, char *argv[]) {
 	int listenSocketFD, establishedConnectionFD, portNumber, charsRead;
@@ -46,7 +49,7 @@ int main(int argc, char *argv[]) {
 				memset(readBuffer, '\0', 10001);
 				recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
 				if (strcmp(readBuffer, "enc") != 0) {
-					error("ERROR this is encryption port");
+					error("ERROR\nThis is encryption port");
 				}
 				memset(text, '\0', 200001);
 				memset(readBuffer, '\0', 10001);
