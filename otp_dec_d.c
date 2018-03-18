@@ -33,24 +33,35 @@ int main(int argc, char *argv[])
 	if (bind(listenSocketFD, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to port
 		error("ERROR on binding");
 	listen(listenSocketFD, 5); // Flip the socket on - it can now receive up to 5 connections
-	while (1) {
-		// Accept a connection, blocking if one is not available until one connects
-		sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
-		establishedConnectionFD = accept(listenSocketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo); // Accept
-		if (establishedConnectionFD < 0) error("ERROR on accept");
-
-		// Get the message from the client and display it
+	int l;
+	for (l = 0; l < 5; l++) {
+		int status;
+		pid_t pid;
+		pid = fork();
+		if (pid < 0) {
+			perror("ERROR");
+			exit(1);
+		}
+		if (pid == 0) {
+			setpgid(0,0);
+			while (1) {
+				sizeOfClientInfo = sizeof(clientAddress); // Get the size of the address for the client that will connect
+				establishedConnectionFD = accept(listenSocketFD, (struct sockaddr *)&clientAddress, &sizeOfClientInfo); // Accept
+				if (establishedConnectionFD < 0) {
+					error("ERROR on accept");
+				}
+		
 
 		char readBuffer[10000];
 		memset(readBuffer, '\0', 10001);
 		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
 		if (strcmp(readBuffer, "dec") != 0) {
-			error("ERROR this is encrypted port");
+			error("ERROR this is decryption port");
 		}
 
 		memset(text, '\0', 200001);
 		memset(readBuffer, '\0', 10001);
-		//charsRead = recv(establishedConnectionFD, text, 10000, 0); // Read the client's message from the socket
+		
 		while (strstr(text, "@@") == NULL) {
 			memset(readBuffer, '\0', sizeof(readBuffer));
 			recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
@@ -104,8 +115,14 @@ int main(int argc, char *argv[])
 		// Send a Success message back to the client
 		charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
 		if (charsRead < 0) error("ERROR writing to socket");
-		//close(establishedConnectionFD); // Close the existing socket which is connected to the client
-		//close(listenSocketFD); // Close the listening socket
+		close(establishedConnectionFD); // Close the existing socket which is connected to the client
+		
 	}
+}	
+else {
+	waitpid(pid, &status, WNOHANG);
+}
+}
+	close(listenSocketFD); // Close the listening socket
 	return 0; 
 }
