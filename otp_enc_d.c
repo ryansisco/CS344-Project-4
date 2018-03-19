@@ -17,6 +17,63 @@ void error(const char *msg) {
 	exit(1); 
 }
 
+void loopread(int establishedConnectionFD, char *text, char *readBuffer) {
+//******************************************************************************
+// FUNCTION NAME: loopread
+// AUTHOR: Ryan Sisco
+// PURPOSE: reads input in chunks of 10000
+// PARAMETERS: establishedConnectionFD, text, buffer
+//****************************************************************************** 
+	while (strstr(text, "@@") == NULL) {
+		memset(readBuffer, '\0', sizeof(readBuffer));
+		recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
+		strcat(text, readBuffer);	// appends buffer to text
+	}
+}
+
+int encrypt(char *text, char *key, char first, char firstkey, int size) {
+//******************************************************************************
+// FUNCTION NAME: encrypt
+// AUTHOR: Ryan Sisco
+// PURPOSE: encrypts the data with the key
+// PARAMETERS: text, key, first char of text, first char of key, size of test
+//****************************************************************************** 
+	int i;
+	for (i = 0; i < size; i++) {
+		int temp1, temp2, temp3;
+		if (i == 0) {	// resets first var due to clear
+			text[i] = first;
+			key[i] = firstkey;
+		}
+		if (text[i] == '@') {	// breaks if EOF
+			break;
+		}
+		if (text[i] > 64) {	// regular char
+			temp1 = (text[i] - 65); // 0-25
+		}
+		if (key[i] > 64) {	// regular char
+			temp2 = (key[i] - 65);	// 0-25
+		}
+		if (text[i] == 32) {	// space
+			temp1 = 26;
+		}
+		if (key[i] == 32) {	// space
+			temp2 = 26;
+		}
+		temp3 = (temp2 + temp1);
+		if (temp3 > 26) {
+			temp3 = (temp3 - 27);	// resets to range
+		}
+		if (temp3 < 26) { 
+			text[i] = (temp3 + 65);	// resets to ascii
+		}
+		if (temp3 == 26) {
+			text[i] = ' ';	// sets space
+		}
+	}
+	return i;
+}
+
 int main(int argc, char *argv[]) {
 	int listenSocketFD, establishedConnectionFD, portNumber, charsRead;
 	socklen_t sizeOfClientInfo;
@@ -59,54 +116,14 @@ int main(int argc, char *argv[]) {
 				}
 				memset(text, '\0', 200001);	// clears
 				memset(readBuffer, '\0', 10001);	// clears
-				while (strstr(text, "@@") == NULL) {
-					memset(readBuffer, '\0', sizeof(readBuffer));
-					recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-					strcat(text, readBuffer);	// appends buffer to text
-				}
+				loopread(establishedConnectionFD, text, readBuffer);
 				char first = text[0];
 				memset(key, '\0', 200001);	// clears
 				memset(readBuffer, '\0', 10001);	// clears
-				while (strstr(key, "@@") == NULL) {
-					memset(readBuffer, '\0', sizeof(readBuffer));
-					recv(establishedConnectionFD, readBuffer, 10000, 0); // Read the client's message from the socket
-					strcat(key, readBuffer);	// appends buffer to key
-				}
+				loopread(establishedConnectionFD, key, readBuffer);
 				char firstkey = key[0];
-				int i;
-				for (i = 0; i < sizeof(text); i++) {
-					int temp1, temp2, temp3;
-					if (i == 0) {	// resets first var due to clear
-						text[i] = first;
-						key[i] = firstkey;
-					}
-					if (text[i] == '@') {	// breaks if EOF
-						break;
-					}
-					if (text[i] > 64) {	// regular char
-						temp1 = (text[i] - 65); // 0-25
-					}
-					if (key[i] > 64) {	// regular char
-						temp2 = (key[i] - 65);	// 0-25
-					}
-					if (text[i] == 32) {	// space
-						temp1 = 26;
-					}
-					if (key[i] == 32) {	// space
-						temp2 = 26;
-					}
-					temp3 = (temp2 + temp1);
-					if (temp3 > 26) {
-						temp3 = (temp3 - 27);	// resets to range
-					}
-					if (temp3 < 26) { 
-						text[i] = (temp3 + 65);	// resets to ascii
-					}
-					if (temp3 == 26) {
-						text[i] = ' ';	// sets space
-					}
-				}
-				charsRead = send(establishedConnectionFD, text, i+2, 0); // Send success back
+				int charCount = encrypt(text, key, first, firstkey, sizeof(text)); // gets number of characters
+				charsRead = send(establishedConnectionFD, text, charCount+2, 0); // Send success back
 				if (charsRead < 0) {
 					error("ERROR writing to socket");
 				}
